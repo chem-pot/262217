@@ -1,0 +1,1794 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🧪 일상생활 속 화학식 시뮬레이션</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #0a0a2e, #1a1a4e, #0d2137);
+            min-height: 100vh;
+            font-family: 'Segoe UI', sans-serif;
+            color: white;
+            overflow-x: hidden;
+        }
+
+        /* 배경 파티클 */
+        .particle {
+            position: fixed;
+            border-radius: 50%;
+            pointer-events: none;
+            animation: float 6s infinite ease-in-out;
+            opacity: 0.3;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px) rotate(0deg); }
+            50% { transform: translateY(-20px) rotate(180deg); }
+        }
+
+        /* 헤더 */
+        .header {
+            text-align: center;
+            padding: 40px 20px 20px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 2.8em;
+            background: linear-gradient(90deg, #00f5ff, #ff00ff, #ffff00);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            animation: rainbow 3s linear infinite;
+            background-size: 200% auto;
+        }
+
+        @keyframes rainbow {
+            0% { background-position: 0% center; }
+            100% { background-position: 200% center; }
+        }
+
+        .subtitle {
+            font-size: 1.2em;
+            color: #aaaaff;
+            margin-top: 10px;
+            animation: pulse 2s infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+
+        /* 메인 컨테이너 */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        /* 섹션 제목 */
+        .section-title {
+            text-align: center;
+            font-size: 1.8em;
+            margin: 30px 0 20px;
+            padding: 15px;
+            border-radius: 15px;
+            background: rgba(255,255,255,0.05);
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(10px);
+        }
+
+        /* 카드 그리드 */
+        .card-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(340px, 1fr));
+            gap: 25px;
+            margin: 20px 0;
+        }
+
+        /* 디바이스 카드 */
+        .device-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 20px;
+            padding: 25px;
+            border: 1px solid rgba(255,255,255,0.1);
+            backdrop-filter: blur(15px);
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .device-card::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: radial-gradient(circle, rgba(0,245,255,0.05) 0%, transparent 70%);
+            animation: rotate 8s linear infinite;
+        }
+
+        @keyframes rotate {
+            from { transform: rotate(0deg); }
+            to { transform: rotate(360deg); }
+        }
+
+        .device-card:hover {
+            transform: translateY(-8px);
+            border-color: rgba(0,245,255,0.5);
+            box-shadow: 0 20px 40px rgba(0,245,255,0.2);
+        }
+
+        .device-icon {
+            font-size: 4em;
+            text-align: center;
+            margin-bottom: 15px;
+            animation: bounce 2s infinite;
+        }
+
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+
+        .device-name {
+            font-size: 1.5em;
+            font-weight: bold;
+            text-align: center;
+            margin-bottom: 15px;
+            color: #00f5ff;
+        }
+
+        /* 원소 태그 */
+        .element-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            margin: 15px 0;
+            justify-content: center;
+        }
+
+        .element-tag {
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            position: relative;
+        }
+
+        .element-tag:hover {
+            transform: scale(1.15);
+        }
+
+        .element-tag.silicon { background: linear-gradient(135deg, #4a90d9, #357abd); }
+        .element-tag.oxygen { background: linear-gradient(135deg, #e74c3c, #c0392b); }
+        .element-tag.copper { background: linear-gradient(135deg, #e67e22, #d35400); }
+        .element-tag.gold { background: linear-gradient(135deg, #f1c40f, #f39c12); color: #333; }
+        .element-tag.aluminum { background: linear-gradient(135deg, #95a5a6, #7f8c8d); }
+        .element-tag.iron { background: linear-gradient(135deg, #8e44ad, #6c3483); }
+        .element-tag.carbon { background: linear-gradient(135deg, #2c3e50, #34495e); border: 1px solid #555; }
+        .element-tag.nitrogen { background: linear-gradient(135deg, #1abc9c, #16a085); }
+        .element-tag.indium { background: linear-gradient(135deg, #3498db, #2980b9); }
+        .element-tag.tin { background: linear-gradient(135deg, #7f8c8d, #6c7a7d); }
+        .element-tag.tungsten { background: linear-gradient(135deg, #ff6b35, #f7931e); color: #333; }
+        .element-tag.argon { background: linear-gradient(135deg, #9b59b6, #8e44ad); }
+        .element-tag.neodymium { background: linear-gradient(135deg, #e91e63, #c2185b); }
+        .element-tag.boron { background: linear-gradient(135deg, #00bcd4, #0097a7); }
+        .element-tag.hydrogen { background: linear-gradient(135deg, #ffffff, #eeeeee); color: #333; }
+        .element-tag.phosphorus { background: linear-gradient(135deg, #ff5722, #bf360c); }
+
+        /* 화학식 박스 */
+        .formula-box {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            padding: 12px;
+            margin: 10px 0;
+            border-left: 4px solid #00f5ff;
+        }
+
+        .formula-box .formula-title {
+            font-size: 0.85em;
+            color: #aaaaff;
+            margin-bottom: 5px;
+        }
+
+        .formula-box .formula-text {
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #ffffff;
+            font-family: 'Courier New', monospace;
+        }
+
+        /* 비교 섹션 */
+        .comparison-section {
+            margin: 30px 0;
+        }
+
+        .comparison-container {
+            display: grid;
+            grid-template-columns: 1fr auto 1fr;
+            gap: 20px;
+            align-items: center;
+            margin: 20px 0;
+        }
+
+        .vs-circle {
+            width: 80px;
+            height: 80px;
+            border-radius: 50%;
+            background: linear-gradient(135deg, #ff00ff, #00f5ff);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.5em;
+            font-weight: bold;
+            animation: spin 4s linear infinite;
+            box-shadow: 0 0 30px rgba(255,0,255,0.5);
+        }
+
+        @keyframes spin {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+        }
+
+        /* 공통 원소 */
+        .common-elements {
+            background: linear-gradient(135deg, rgba(0,245,255,0.1), rgba(255,0,255,0.1));
+            border-radius: 20px;
+            padding: 25px;
+            margin: 20px 0;
+            border: 2px solid rgba(0,245,255,0.3);
+            text-align: center;
+        }
+
+        .common-title {
+            font-size: 1.5em;
+            color: #00f5ff;
+            margin-bottom: 15px;
+        }
+
+        /* 결론 박스 */
+        .conclusion-box {
+            background: linear-gradient(135deg, rgba(255,215,0,0.15), rgba(255,140,0,0.15));
+            border: 2px solid rgba(255,215,0,0.5);
+            border-radius: 20px;
+            padding: 30px;
+            margin: 30px 0;
+            text-align: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .conclusion-box::after {
+            content: '✨';
+            position: absolute;
+            font-size: 8em;
+            opacity: 0.05;
+            right: -20px;
+            bottom: -20px;
+        }
+
+        .conclusion-text {
+            font-size: 1.6em;
+            color: #ffd700;
+            font-weight: bold;
+            text-shadow: 0 0 20px rgba(255,215,0,0.5);
+        }
+
+        /* 일상 화학식 섹션 */
+        .daily-section {
+            margin: 30px 0;
+        }
+
+        .daily-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .daily-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 15px;
+            padding: 20px;
+            text-align: center;
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .daily-card:hover {
+            transform: scale(1.05);
+            background: rgba(255,255,255,0.1);
+        }
+
+        .daily-card-icon {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .daily-card-name {
+            font-size: 1em;
+            color: #aaaaff;
+            margin-bottom: 5px;
+        }
+
+        .daily-card-formula {
+            font-size: 1.3em;
+            font-weight: bold;
+            color: #00f5ff;
+            font-family: 'Courier New', monospace;
+        }
+
+        .daily-card-desc {
+            font-size: 0.8em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        /* 원자 시각화 */
+        .atom-viz {
+            position: relative;
+            width: 120px;
+            height: 120px;
+            margin: 0 auto;
+        }
+
+        .nucleus {
+            position: absolute;
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.75em;
+            font-weight: bold;
+            z-index: 2;
+        }
+
+        .orbit {
+            position: absolute;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.2);
+            top: 50%;
+            left: 50%;
+            animation: orbit-spin linear infinite;
+        }
+
+        @keyframes orbit-spin {
+            from { transform: translate(-50%, -50%) rotate(0deg); }
+            to { transform: translate(-50%, -50%) rotate(360deg); }
+        }
+
+        .electron {
+            position: absolute;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: #00f5ff;
+            top: -4px;
+            left: 50%;
+            margin-left: -4px;
+        }
+
+        /* 모달 */
+        .modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+            backdrop-filter: blur(5px);
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: linear-gradient(135deg, #1a1a4e, #0d2137);
+            border-radius: 25px;
+            padding: 35px;
+            max-width: 500px;
+            width: 90%;
+            border: 1px solid rgba(0,245,255,0.3);
+            box-shadow: 0 0 50px rgba(0,245,255,0.3);
+            position: relative;
+            animation: modalIn 0.3s ease;
+        }
+
+        @keyframes modalIn {
+            from { transform: scale(0.8); opacity: 0; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 15px;
+            right: 20px;
+            font-size: 1.5em;
+            cursor: pointer;
+            color: #aaa;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover { color: #fff; }
+
+        .modal-title {
+            font-size: 1.8em;
+            color: #00f5ff;
+            margin-bottom: 15px;
+        }
+
+        .modal-body {
+            color: #cccccc;
+            line-height: 1.8;
+        }
+
+        .modal-formula {
+            font-size: 1.4em;
+            color: #ffd700;
+            font-family: 'Courier New', monospace;
+            background: rgba(0,0,0,0.3);
+            padding: 10px;
+            border-radius: 10px;
+            margin: 10px 0;
+            text-align: center;
+        }
+
+        /* 탭 버튼 */
+        .tab-container {
+            display: flex;
+            gap: 10px;
+            justify-content: center;
+            margin: 20px 0;
+            flex-wrap: wrap;
+        }
+
+        .tab-btn {
+            padding: 10px 25px;
+            border-radius: 25px;
+            border: 2px solid rgba(0,245,255,0.3);
+            background: rgba(0,0,0,0.3);
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            transition: all 0.3s ease;
+        }
+
+        .tab-btn:hover, .tab-btn.active {
+            background: rgba(0,245,255,0.2);
+            border-color: #00f5ff;
+            box-shadow: 0 0 15px rgba(0,245,255,0.3);
+            transform: translateY(-2px);
+        }
+
+        /* 진행 바 */
+        .progress-bar {
+            height: 6px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 3px;
+            margin: 8px 0;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 3px;
+            transition: width 1s ease;
+            animation: shimmer 2s infinite;
+        }
+
+        @keyframes shimmer {
+            0% { opacity: 0.8; }
+            50% { opacity: 1; }
+            100% { opacity: 0.8; }
+        }
+
+        /* 반응형 */
+        @media (max-width: 768px) {
+            .header h1 { font-size: 1.8em; }
+            .comparison-container {
+                grid-template-columns: 1fr;
+            }
+            .vs-circle { margin: 0 auto; }
+            .card-grid { grid-template-columns: 1fr; }
+        }
+
+        /* 스크롤 애니메이션 */
+        .fade-in {
+            opacity: 0;
+            transform: translateY(30px);
+            transition: all 0.6s ease;
+        }
+
+        .fade-in.visible {
+            opacity: 1;
+            transform: translateY(0);
+        }
+
+        /* 글로우 효과 */
+        .glow-text {
+            text-shadow: 0 0 10px currentColor;
+        }
+
+        /* 알림 배너 */
+        .info-banner {
+            background: linear-gradient(135deg, rgba(0,245,255,0.15), rgba(0,100,200,0.15));
+            border: 1px solid rgba(0,245,255,0.3);
+            border-radius: 15px;
+            padding: 15px 25px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            font-size: 0.95em;
+            color: #ccddff;
+        }
+
+        .info-banner .info-icon {
+            font-size: 1.5em;
+            flex-shrink: 0;
+        }
+
+        /* 원소 상세 */
+        .element-detail {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin: 15px 0;
+        }
+
+        .element-detail-item {
+            background: rgba(0,0,0,0.2);
+            border-radius: 10px;
+            padding: 10px;
+            text-align: center;
+        }
+
+        .element-detail-item .el-symbol {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: #00f5ff;
+        }
+
+        .element-detail-item .el-name {
+            font-size: 0.8em;
+            color: #aaa;
+        }
+
+        .element-detail-item .el-num {
+            font-size: 0.9em;
+            color: #ffd700;
+        }
+
+        /* 퀴즈 */
+        .quiz-section {
+            background: rgba(255,255,255,0.03);
+            border-radius: 20px;
+            padding: 25px;
+            margin: 30px 0;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+
+        .quiz-question {
+            font-size: 1.2em;
+            color: #ffffff;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        .quiz-options {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .quiz-option {
+            padding: 12px;
+            border-radius: 12px;
+            border: 2px solid rgba(255,255,255,0.2);
+            background: rgba(0,0,0,0.2);
+            cursor: pointer;
+            text-align: center;
+            transition: all 0.2s ease;
+            font-size: 1.1em;
+        }
+
+        .quiz-option:hover {
+            border-color: #00f5ff;
+            background: rgba(0,245,255,0.1);
+        }
+
+        .quiz-option.correct {
+            background: rgba(0,255,100,0.2);
+            border-color: #00ff64;
+        }
+
+        .quiz-option.wrong {
+            background: rgba(255,50,50,0.2);
+            border-color: #ff3232;
+        }
+
+        .quiz-result {
+            text-align: center;
+            margin-top: 15px;
+            font-size: 1.1em;
+            display: none;
+        }
+
+        .btn-reset {
+            padding: 10px 25px;
+            background: linear-gradient(135deg, #00f5ff, #0080ff);
+            border: none;
+            border-radius: 25px;
+            color: white;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 15px;
+            transition: all 0.3s;
+            display: none;
+        }
+
+        .btn-reset:hover {
+            transform: scale(1.05);
+            box-shadow: 0 5px 20px rgba(0,245,255,0.4);
+        }
+
+        /* 페이지 탐색 버튼 */
+        .nav-buttons {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin: 20px 0 40px;
+            flex-wrap: wrap;
+        }
+
+        .nav-btn {
+            padding: 12px 28px;
+            border-radius: 30px;
+            border: none;
+            cursor: pointer;
+            font-size: 1em;
+            font-weight: bold;
+            transition: all 0.3s ease;
+            color: white;
+        }
+
+        .nav-btn:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.3);
+        }
+
+        .btn-blue { background: linear-gradient(135deg, #0066ff, #00c3ff); }
+        .btn-purple { background: linear-gradient(135deg, #9b59b6, #6c3483); }
+        .btn-green { background: linear-gradient(135deg, #27ae60, #1abc9c); }
+        .btn-orange { background: linear-gradient(135deg, #e67e22, #f39c12); }
+
+        /* 섹션 콘텐츠 */
+        .section-content {
+            display: none;
+        }
+
+        .section-content.active {
+            display: block;
+            animation: fadeIn 0.5s ease;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* 원자 수 비교 바 */
+        .atom-compare {
+            margin: 15px 0;
+        }
+
+        .atom-compare-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin: 8px 0;
+        }
+
+        .atom-compare-label {
+            width: 80px;
+            font-size: 0.9em;
+            color: #aaa;
+            flex-shrink: 0;
+        }
+
+        .atom-compare-bar {
+            flex: 1;
+            height: 20px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 10px;
+            overflow: hidden;
+        }
+
+        .atom-compare-fill {
+            height: 100%;
+            border-radius: 10px;
+            display: flex;
+            align-items: center;
+            padding-left: 8px;
+            font-size: 0.8em;
+            font-weight: bold;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 배경 파티클 -->
+    <div id="particles"></div>
+
+    <div class="header">
+        <h1>⚗️ 일상생활 속 화학식 시뮬레이션</h1>
+        <p class="subtitle">🔬 우리 주변 모든 것은 원자로 이루어져 있다!</p>
+    </div>
+
+    <!-- 탐색 버튼 -->
+    <div class="nav-buttons">
+        <button class="nav-btn btn-blue" onclick="showSection('computer')">💻 내 방 컴퓨터</button>
+        <button class="nav-btn btn-purple" onclick="showSection('light')">💡 전등</button>
+        <button class="nav-btn btn-green" onclick="showSection('tv')">📺 거실 TV</button>
+        <button class="nav-btn btn-orange" onclick="showSection('daily')">🌍 일상 화학식</button>
+    </div>
+
+    <div class="main-container">
+
+        <!-- ===== 컴퓨터 섹션 ===== -->
+        <div class="section-content active" id="section-computer">
+            <div class="section-title fade-in">
+                💻 내 방의 컴퓨터 - 화학식 분석
+            </div>
+
+            <div class="info-banner fade-in">
+                <span class="info-icon">💡</span>
+                <span>컴퓨터는 다양한 화학 물질로 구성되어 있어요! 각 부품마다 다른 원소가 사용됩니다.</span>
+            </div>
+
+            <div class="card-grid">
+
+                <!-- CPU 카드 -->
+                <div class="device-card fade-in" onclick="openModal('cpu')">
+                    <div class="device-icon">🔲</div>
+                    <div class="device-name">CPU (중앙처리장치)</div>
+                    <div class="element-tags">
+                        <span class="element-tag silicon">Si 규소</span>
+                        <span class="element-tag copper">Cu 구리</span>
+                        <span class="element-tag gold">Au 금</span>
+                        <span class="element-tag phosphorus">P 인</span>
+                        <span class="element-tag boron">B 붕소</span>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">반도체 기판</div>
+                        <div class="formula-text">Si (순수 규소)</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">n형 반도체 도핑</div>
+                        <div class="formula-text">Si + P → 전자 과잉</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">p형 반도체 도핑</div>
+                        <div class="formula-text">Si + B → 양공 생성</div>
+                    </div>
+                    <div style="text-align:center; margin-top:15px; color:#aaa; font-size:0.85em;">
+                        🖱️ 클릭하여 자세히 보기
+                    </div>
+                </div>
+
+                <!-- 모니터 카드 -->
+                <div class="device-card fade-in" onclick="openModal('monitor')">
+                    <div class="device-icon">🖥️</div>
+                    <div class="device-name">LCD 모니터</div>
+                    <div class="element-tags">
+                        <span class="element-tag silicon">Si 규소</span>
+                        <span class="element-tag oxygen">O 산소</span>
+                        <span class="element-tag indium">In 인듐</span>
+                        <span class="element-tag tin">Sn 주석</span>
+                        <span class="element-tag aluminum">Al 알루미늄</span>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">유리 기판</div>
+                        <div class="formula-text">SiO₂ (이산화규소)</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">투명 전극 (ITO)</div>
+                        <div class="formula-text">In₂O₃·SnO₂</div>
+                    </div>
+                    <div style="text-align:center; margin-top:15px; color:#aaa; font-size:0.85em;">
+                        🖱️ 클릭하여 자세히 보기
+                    </div>
+                </div>
+
+                <!-- 배터리/전원 카드 -->
+                <div class="device-card fade-in" onclick="openModal('battery')">
+                    <div class="device-icon">🔋</div>
+                    <div class="device-name">전원/배터리</div>
+                    <div class="element-tags">
+                        <span class="element-tag carbon">C 탄소</span>
+                        <span class="element-tag oxygen">O 산소</span>
+                        <span class="element-tag iron">Li 리튬</span>
+                        <span class="element-tag copper">Cu 구리</span>
+                        <span class="element-tag aluminum">Al 알루미늄</span>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">리튬이온 배터리 양극</div>
+                        <div class="formula-text">LiCoO₂</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">전해질</div>
+                        <div class="formula-text">LiPF₆</div>
+                    </div>
+                    <div style="text-align:center; margin-top:15px; color:#aaa; font-size:0.85em;">
+                        🖱️ 클릭하여 자세히 보기
+                    </div>
+                </div>
+
+                <!-- 케이블/회로 카드 -->
+                <div class="device-card fade-in" onclick="openModal('circuit')">
+                    <div class="device-icon">⚡</div>
+                    <div class="device-name">회로기판 (PCB)</div>
+                    <div class="element-tags">
+                        <span class="element-tag copper">Cu 구리</span>
+                        <span class="element-tag gold">Au 금</span>
+                        <span class="element-tag tin">Sn 주석</span>
+                        <span class="element-tag carbon">C 탄소</span>
+                        <span class="element-tag silicon">Si 규소</span>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">납땜 (무연 솔더)</div>
+                        <div class="formula-text">Sn-Ag-Cu 합금</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">기판 소재 (에폭시)</div>
+                        <div class="formula-text">C₂H₄O (에폭시 수지)</div>
+                    </div>
+                    <div style="text-align:center; margin-top:15px; color:#aaa; font-size:0.85em;">
+                        🖱️ 클릭하여 자세히 보기
+                    </div>
+                </div>
+
+            </div>
+
+            <!-- 컴퓨터 원소 총정리 -->
+            <div class="conclusion-box fade-in">
+                <div class="common-title">🧩 컴퓨터를 구성하는 주요 원소 정리</div>
+                <div class="atom-compare">
+                    <div class="atom-compare-item">
+                        <span class="atom-compare-label">Si (규소)</span>
+                        <div class="atom-compare-bar">
+                            <div class="atom-compare-fill" style="width:90%; background: linear-gradient(90deg, #4a90d9, #357abd);">
+                                원자번호 14 | 반도체
+                            </div>
+                        </div>
+                    </div>
+                    <div class="atom-compare-item">
+                        <span class="atom-compare-label">Cu (구리)</span>
+                        <div class="atom-compare-bar">
+                            <div class="atom-compare-fill" style="width:80%; background: linear-gradient(90deg, #e67e22, #d35400);">
+                                원자번호 29 | 전도체
+                            </div>
+                        </div>
+                    </div>
+                    <div class="atom-compare-item">
+                        <span class="atom-compare-label">Au (금)</span>
+                        <div class="atom-compare-bar">
+                            <div class="atom-compare-fill" style="width:50%; background: linear-gradient(90deg, #f1c40f, #f39c12); color:#333;">
+                                원자번호 79 | 커넥터
+                            </div>
+                        </div>
+                    </div>
+                    <div class="atom-compare-item">
+                        <span class="atom-compare-label">O (산소)</span>
+                        <div class="atom-compare-bar">
+                            <div class="atom-compare-fill" style="width:70%; background: linear-gradient(90deg, #e74c3c, #c0392b);">
+                                원자번호 8 | 산화막
+                            </div>
+                        </div>
+                    </div>
+                    <div class="atom-compare-item">
+                        <span class="atom-compare-label">Al (알루미늄)</span>
+                        <div class="atom-compare-bar">
+                            <div class="atom-compare-fill" style="width:65%; background: linear-gradient(90deg, #95a5a6, #7f8c8d);">
+                                원자번호 13 | 케이스
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 전등 섹션 ===== -->
+        <div class="section-content" id="section-light">
+            <div class="section-title fade-in">
+                💡 전등의 화학식과 원소 분석
+            </div>
+
+            <div class="tab-container">
+                <button class="tab-btn active" onclick="switchTab('led', this)">💡 LED 전등</button>
+                <button class="tab-btn" onclick="switchTab('fluorescent', this)">🌟 형광등</button>
+                <button class="tab-btn" onclick="switchTab('incandescent', this)">🔆 백열등</button>
+            </div>
+
+            <!-- LED 전등 -->
+            <div id="tab-led" class="card-grid">
+                <div class="device-card fade-in">
+                    <div class="device-icon">💡</div>
+                    <div class="device-name">LED 전등</div>
+                    <div class="element-tags">
+                        <span class="element-tag nitrogen">GaN 질화갈륨</span>
+                        <span class="element-tag indium">InGaN 인듐갈륨</span>
+                        <span class="element-tag aluminum">Al 알루미늄</span>
+                        <span class="element-tag oxygen">O 산소</span>
+                        <span class="element-tag silicon">Si 규소</span>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">청색 LED 반도체</div>
+                        <div class="formula-text">InGaN (인듐갈륨질화물)</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">백색 LED 형광체</div>
+                        <div class="formula-text">Y₃Al₅O₁₂ : Ce³⁺ (YAG)</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">기판</div>
+                        <div class="formula-text">Al₂O₃ (산화알루미늄)</div>
+                    </div>
+                </div>
+
+                <div class="device-card fade-in">
+                    <div class="device-icon">🔬</div>
+                    <div class="device-name">LED 원소 상세</div>
+                    <div class="element-detail">
+                        <div class="element-detail-item">
+                            <div class="el-symbol">In</div>
+                            <div class="el-name">인듐</div>
+                            <div class="el-num">원자번호 49</div>
+                        </div>
+                        <div class="element-detail-item">
+                            <div class="el-symbol">Ga</div>
+                            <div class="el-name">갈륨</div>
+                            <div class="el-num">원자번호 31</div>
+                        </div>
+                        <div class="element-detail-item">
+                            <div class="el-symbol">N</div>
+                            <div class="el-name">질소</div>
+                            <div class="el-num">원자번호 7</div>
+                        </div>
+                        <div class="element-detail-item">
+                            <div class="el-symbol">Y</div>
+                            <div class="el-name">이트륨</div>
+                            <div class="el-num">원자번호 39</div>
+                        </div>
+                    </div>
+                    <div class="info-banner" style="margin-top:15px;">
+                        <span class="info-icon">⚡</span>
+                        <span>LED는 전기에너지를 빛에너지로 직접 변환! <br>
+                        \[ GaN + 전기 → 광자(빛) \]
+                        </span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 형광등 -->
+            <div id="tab-fluorescent" class="card-grid" style="display:none;">
+                <div class="device-card fade-in">
+                    <div class="device-icon">🌟</div>
+                    <div class="device-name">형광등 (CFL)</div>
+                    <div class="element-tags">
+                        <span class="element-tag argon">Ar 아르곤</span>
+                        <span class="element-tag neodymium">Hg 수은</span>
+                        <span class="element-tag silicon">SiO₂ 유리</span>
+                        <span class="element-tag phosphorus">P 인산염</span>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">내부 기체 혼합</div>
+                        <div class="formula-text">Ar + Hg 증기</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">형광 물질 (백색)</div>
+                        <div class="formula-text">Ca₅(PO₄)₃F : Sb³⁺, Mn²⁺</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">자외선 발생 반응</div>
+                        <div class="formula-text">Hg + e⁻ → Hg* → UV 방출</div>
+                    </div>
+                </div>
+
+                <div class="device-card fade-in">
+                    <div class="device-icon">⚠️</div>
+                    <div class="device-name">형광등 주의사항</div>
+                    <div style="color:#ffaa00; text-align:center; font-size:3em; margin:10px 0;">☣️</div>
+                    <p style="color:#ffcccc; text-align:center; margin-bottom:15px;">
+                        형광등에는 <strong style="color:#ff5555;">수은(Hg)</strong>이 포함되어 있어 각별한 주의가 필요합니다!
+                    </p>
+                    <div class="formula-box">
+                        <div class="formula-title">수은의 위험성</div>
+                        <div class="formula-text">Hg → 신경계 독성물질</div>
+                    </div>
+                    <div class="info-banner">
+                        <span class="info-icon">♻️</span>
+                        <span>형광등은 반드시 전용 수거함에 분리배출!</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 백열등 -->
+            <div id="tab-incandescent" class="card-grid" style="display:none;">
+                <div class="device-card fade-in">
+                    <div class="device-icon">🔆</div>
+                    <div class="device-name">백열등</div>
+                    <div class="element-tags">
+                        <span class="element-tag tungsten">W 텅스텐</span>
+                        <span class="element-tag argon">Ar 아르곤</span>
+                        <span class="element-tag nitrogen">N₂ 질소</span>
+                        <span class="element-tag silicon">SiO₂ 유리</span>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">필라멘트</div>
+                        <div class="formula-text">W (텅스텐, 녹는점 3422°C)</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">내부 충전 기체</div>
+                        <div class="formula-text">Ar + N₂ (불활성 혼합)</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">산화 방지 반응</div>
+                        <div class="formula-text">Ar (비활성) → 텅스텐 보호</div>
+                    </div>
+                </div>
+
+                <div class="device-card fade-in">
+                    <div class="device-icon">📊</div>
+                    <div class="device-name">에너지 효율 비교</div>
+                    <p style="color:#aaa; text-align:center; margin-bottom:15px; font-size:0.9em;">같은 밝기(800 lumen) 기준</p>
+                    <div class="atom-compare">
+                        <div class="atom-compare-item">
+                            <span class="atom-compare-label">백열등</span>
+                            <div class="atom-compare-bar">
+                                <div class="atom-compare-fill" style="width:90%; background: linear-gradient(90deg, #e74c3c, #c0392b);">
+                                    60W 소비
+                                </div>
+                            </div>
+                        </div>
+                        <div class="atom-compare-item">
+                            <span class="atom-compare-label">형광등</span>
+                            <div class="atom-compare-bar">
+                                <div class="atom-compare-fill" style="width:50%; background: linear-gradient(90deg, #f39c12, #e67e22);">
+                                    13W 소비
+                                </div>
+                            </div>
+                        </div>
+                        <div class="atom-compare-item">
+                            <span class="atom-compare-label">LED</span>
+                            <div class="atom-compare-bar">
+                                <div class="atom-compare-fill" style="width:15%; background: linear-gradient(90deg, #27ae60, #1abc9c);">
+                                    9W
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="info-banner" style="margin-top:15px;">
+                        <span class="info-icon">🌱</span>
+                        <span>LED가 가장 친환경적이고 에너지 효율이 높습니다!</span>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== TV 섹션 & 비교 ===== -->
+        <div class="section-content" id="section-tv">
+            <div class="section-title fade-in">
+                📺 거실 TV vs 💻 컴퓨터 화학식 비교
+            </div>
+
+            <div class="info-banner fade-in">
+                <span class="info-icon">🔍</span>
+                <span>TV와 컴퓨터는 같은 원소를 사용할까요? 비교해 봅시다!</span>
+            </div>
+
+            <!-- 비교 영역 -->
+            <div class="comparison-container fade-in">
+                <!-- TV -->
+                <div class="device-card">
+                    <div class="device-icon">📺</div>
+                    <div class="device-name" style="color:#ff6b9d;">거실 TV (OLED)</div>
+                    <div class="formula-box">
+                        <div class="formula-title">OLED 발광층</div>
+                        <div class="formula-text">Alq₃ (트리스-알루미늄)</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">유리 기판</div>
+                        <div class="formula-text">SiO₂</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">투명 전극</div>
+                        <div class="formula-text">In₂O₃·SnO₂ (ITO)</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">회로 기판</div>
+                        <div class="formula-text">Cu, Au, Si</div>
+                    </div>
+                    <div class="element-tags" style="margin-top:15px;">
+                        <span class="element-tag silicon">Si</span>
+                        <span class="element-tag oxygen">O</span>
+                        <span class="element-tag copper">Cu</span>
+                        <span class="element-tag gold">Au</span>
+                        <span class="element-tag indium">In</span>
+                        <span class="element-tag aluminum">Al</span>
+                    </div>
+                </div>
+
+                <!-- VS -->
+                <div style="text-align:center;">
+                    <div class="vs-circle">VS</div>
+                    <div style="color:#aaa; font-size:0.9em; margin-top:10px;">비교 중...</div>
+                </div>
+
+                <!-- 컴퓨터 -->
+                <div class="device-card">
+                    <div class="device-icon">💻</div>
+                    <div class="device-name" style="color:#00f5ff;">내 방 컴퓨터 (LCD)</div>
+                    <div class="formula-box">
+                        <div class="formula-title">LCD 액정</div>
+                        <div class="formula-text">유기 액정 분자</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">유리 기판</div>
+                        <div class="formula-text">SiO₂</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">투명 전극</div>
+                        <div class="formula-text">In₂O₃·SnO₂ (ITO)</div>
+                    </div>
+                    <div class="formula-box">
+                        <div class="formula-title">회로 기판</div>
+                        <div class="formula-text">Cu, Au, Si</div>
+                    </div>
+                    <div class="element-tags" style="margin-top:15px;">
+                        <span class="element-tag silicon">Si</span>
+                        <span class="element-tag oxygen">O</span>
+                        <span class="element-tag copper">Cu</span>
+                        <span class="element-tag gold">Au</span>
+                        <span class="element-tag indium">In</span>
+                        <span class="element-tag aluminum">Al</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- 공통 원소 -->
+            <div class="common-elements fade-in">
+                <div class="common-title">🎯 TV와 컴퓨터의 공통 원소</div>
+                <div class="element-tags" style="justify-content:center; margin: 20px 0;">
+                    <span class="element-tag silicon" style="font-size:1.1em; padding:10px 20px;">Si 규소</span>
+                    <span class="element-tag oxygen" style="font-size:1.1em; padding:10px 20px;">O 산소</span>
+                    <span class="element-tag copper" style="font-size:1.1em; padding:10px 20px;">Cu 구리</span>
+                    <span class="element-tag gold" style="font-size:1.1em; padding:10px 20px;">Au 금</span>
+                    <span class="element-tag indium" style="font-size:1.1em; padding:10px 20px;">In 인듐</span>
+                    <span class="element-tag aluminum" style="font-size:1.1em; padding:10px 20px;">Al 알루미늄</span>
+                    <span class="element-tag tin" style="font-size:1.1em; padding:10px 20px;">Sn 주석</span>
+                </div>
+                <p style="color:#ccddff; font-size:1em; line-height:1.8;">
+                    TV와 컴퓨터 모두 <strong style="color:#ffd700;">SiO₂</strong> 유리 기판과 
+                    <strong style="color:#ffd700;">ITO(In₂O₃·SnO₂)</strong> 투명 전극을 사용하며,
+                    <strong style="color:#ffd700;">Cu, Au</strong>로 회로를 구성합니다.
+                </p>
+            </div>
+
+            <!-- 결론 -->
+            <div class="conclusion-box fade-in">
+                <div style="font-size:3em; margin-bottom:15px;">🏆</div>
+                <div class="conclusion-text">
+                    "디지털 기기는 모두 같은 원자를 사용한다!"
+                </div>
+                <p style="color:#ffe08a; margin-top:15px; font-size:1.1em; line-height:1.8;">
+                    TV와 컴퓨터의 핵심 원소인 Si(규소), Cu(구리), Au(금), SiO₂, ITO는<br>
+                    완전히 동일합니다. 즉, <strong>디지털 기기의 원자는 모두 같다</strong>고 할 수 있습니다!
+                </p>
+                <div style="margin-top:20px; padding:15px; background:rgba(0,0,0,0.2); border-radius:12px;">
+                    <p style="color:#00f5ff; font-size:0.95em;">
+                        \[ TV의\_핵심\_원소 = 컴퓨터의\_핵심\_원소 \]
+                        \[ \therefore 디지털\_기기 = 동일한\_원자의\_조합 \]
+                    </p>
+                </div>
+            </div>
+
+            <!-- 퀴즈 -->
+            <div class="quiz-section fade-in">
+                <div class="common-title">🧠 TV vs 컴퓨터 퀴즈!</div>
+                <div id="quiz-container">
+                    <div class="quiz-question" id="quiz-q">
+                        TV와 컴퓨터 디스플레이에서 공통으로 사용하는 투명 전극 소재는?
+                    </div>
+                    <div class="quiz-options">
+                        <div class="quiz-option" onclick="checkAnswer(this, false)">Cu₂O</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, true)">In₂O₃·SnO₂ (ITO)</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, false)">Al₂O₃</div>
+                        <div class="quiz-option" onclick="checkAnswer(this, false)">SiC</div>
+                    </div>
+                    <div class="quiz-result" id="quiz-result"></div>
+                    <div style="text-align:center;">
+                        <button class="btn-reset" id="quiz-reset" onclick="resetQuiz()">다음 문제 ▶</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- ===== 일상 화학식 섹션 ===== -->
+        <div class="section-content" id="section-daily">
+            <div class="section-title fade-in">
+                🌍 일상생활에서 몰랐던 화학식!
+            </div>
+
+            <div style="text-align:center; margin:20px 0; padding:20px; background:linear-gradient(135deg, rgba(255,215,0,0.1), rgba(255,100,0,0.1)); border-radius:20px; border: 2px solid rgba(255,215,0,0.3);" class="fade-in">
+                <p style="font-size:1.3em; color:#ffd700; font-weight:bold;">
+                    ✨ 우리 주변 모든 것에는 화학식이 있다! ✨
+                </p>
+                <p style="color:#cccccc; margin-top:10px;">카드를 클릭하면 자세한 설명을 볼 수 있어요!</p>
+            </div>
+
+            <!-- 일상 화학식 그리드 -->
+            <div class="daily-grid fade-in">
+                <div class="daily-card" onclick="openDailyModal('water')">
+                    <div class="daily-card-icon">💧</div>
+                    <div class="daily-card-name">물</div>
+                    <div class="daily-card-formula">H₂O</div>
+                    <div class="daily-card-desc">수소 2 + 산소 1</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('co2')">
+                    <div class="daily-card-icon">🫧</div>
+                    <div class="daily-card-name">이산화탄소</div>
+                    <div class="daily-card-formula">CO₂</div>
+                    <div class="daily-card-desc">숨쉴 때 내뱉는 기체</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('salt')">
+                    <div class="daily-card-icon">🧂</div>
+                    <div class="daily-card-name">소금</div>
+                    <div class="daily-card-formula">NaCl</div>
+                    <div class="daily-card-desc">나트륨 + 염소</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('sugar')">
+                    <div class="daily-card-icon">🍬</div>
+                    <div class="daily-card-name">설탕</div>
+                    <div class="daily-card-formula">C₁₂H₂₂O₁₁</div>
+                    <div class="daily-card-desc">자당 (수크로스)</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('o2')">
+                    <div class="daily-card-icon">🌬️</div>
+                    <div class="daily-card-name">산소</div>
+                    <div class="daily-card-formula">O₂</div>
+                    <div class="daily-card-desc">우리가 마시는 공기</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('baking')">
+                    <div class="daily-card-icon">🍞</div>
+                    <div class="daily-card-name">베이킹소다</div>
+                    <div class="daily-card-formula">NaHCO₃</div>
+                    <div class="daily-card-desc">탄산수소나트륨</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('glass')">
+                    <div class="daily-card-icon">🪟</div>
+                    <div class="daily-card-name">유리창</div>
+                    <div class="daily-card-formula">SiO₂</div>
+                    <div class="daily-card-desc">이산화규소 (모래와 동일!)</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('rust')">
+                    <div class="daily-card-icon">🔩</div>
+                    <div class="daily-card-name">철 녹</div>
+                    <div class="daily-card-formula">Fe₂O₃</div>
+                    <div class="daily-card-desc">산화철 (적갈색)</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('toothpaste')">
+                    <div class="daily-card-icon">🦷</div>
+                    <div class="daily-card-name">치약 성분</div>
+                    <div class="daily-card-formula">CaF₂</div>
+                    <div class="daily-card-desc">불화칼슘 (충치 예방)</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('vinegar')">
+                    <div class="daily-card-icon">🍶</div>
+                    <div class="daily-card-name">식초</div>
+                    <div class="daily-card-formula">CH₃COOH</div>
+                    <div class="daily-card-desc">아세트산</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('alcohol')">
+                    <div class="daily-card-icon">🧴</div>
+                    <div class="daily-card-name">소독용 알코올</div>
+                    <div class="daily-card-formula">C₂H₅OH</div>
+                    <div class="daily-card-desc">에탄올</div>
+                </div>
+                <div class="daily-card" onclick="openDailyModal('plastic')">
+                    <div class="daily-card-icon">🧴</div>
+                    <div class="daily-card-name">페트병</div>
+                    <div class="daily-card-formula">(C₁₀H₈O₄)ₙ</div>
+                    <div class="daily-card-desc">PET 폴리에스터</div>
+                </div>
+            </div>
+
+            <!-- 놀라운 사실 박스 -->
+            <div class="conclusion-box fade-in" style="margin-top:30px;">
+                <div style="font-size:2em; margin-bottom:15px;">🤯</div>
+                <div class="conclusion-text">몰랐던 사실!</div>
+                <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(250px, 1fr)); gap:15px; margin-top:20px;">
+                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:15px;">
+                        <div style="font-size:1.5em;">🪟 = 🏖️</div>
+                        <p style="color:#ccddff; margin-top:8px; font-size:0.95em;">
+                            창문 유리(SiO₂)와 해변의 모래(SiO₂)는 <strong style="color:#ffd700;">같은 화학식!</strong>
+                        </p>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:15px;">
+                        <div style="font-size:1.5em;">💨 = ❄️</div>
+                        <p style="color:#ccddff; margin-top:8px; font-size:0.95em;">
+                            드라이아이스(CO₂)와 숨 쉴 때 나오는 기체(CO₂)는 <strong style="color:#ffd700;">같은 화학식!</strong>
+                        </p>
+                    </div>
+                    <div style="background:rgba(0,0,0,0.3); border-radius:12px; padding:15px;">
+                        <div style="font-size:1.5em;">💎 = ✏️</div>
+                        <p style="color:#ccddff; margin-top:8px; font-size:0.95em;">
+                            다이아몬드(C)와 연필심(C)은 <strong style="color:#ffd700;">같은 탄소 원자!</strong> 단지 구조가 다름
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+    </div>
+
+    <!-- ===== 모달들 ===== -->
+
+    <!-- 디바이스 모달 -->
+    <div class="modal" id="modal-device">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('modal-device')">✕</span>
+            <div class="modal-title" id="modal-title"></div>
+            <div class="modal-body" id="modal-body"></div>
+        </div>
+    </div>
+
+    <!-- 일상 화학식 모달 -->
+    <div class="modal" id="modal-daily">
+        <div class="modal-content">
+            <span class="modal-close" onclick="closeModal('modal-daily')">✕</span>
+            <div class="modal-title" id="daily-modal-title"></div>
+            <div class="modal-body" id="daily-modal-body"></div>
+        </div>
+    </div>
+
+    <script>
+        // ===== 배경 파티클 생성 =====
+        const colors = ['#00f5ff', '#ff00ff', '#ffff00', '#00ff80', '#ff8c00'];
+        for(let i = 0; i < 25; i++) {
+            const p = document.createElement('div');
+            p.className = 'particle';
+            const size = Math.random() * 8 + 3;
+            p.style.cssText = `
+                width: ${size}px;
+                height: ${size}px;
+                background: ${colors[Math.floor(Math.random() * colors.length)]};
+                left: ${Math.random() * 100}vw;
+                top: ${Math.random() * 100}vh;
+                animation-duration: ${Math.random() * 4 + 4}s;
+                animation-delay: ${Math.random() * 3}s;
+            `;
+            document.getElementById('particles').appendChild(p);
+        }
+
+        // ===== 섹션 전환 =====
+        function showSection(name) {
+            document.querySelectorAll('.section-content').forEach(s => s.classList.remove('active'));
+            document.getElementById('section-' + name).classList.add('active');
+            triggerFadeIn();
+            window.scrollTo({ top: 100, behavior: 'smooth' });
+        }
+
+        // ===== 탭 전환 =====
+        function switchTab(tabId, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            document.querySelectorAll('[id^="tab-"]').forEach(t => t.style.display = 'none');
+            document.getElementById('tab-' + tabId).style.display = 'grid';
+        }
+
+        // ===== Fade In 애니메이션 =====
+        function triggerFadeIn() {
+            setTimeout(() => {
+                document.querySelectorAll('.fade-in').forEach((el, i) => {
+                    setTimeout(() => el.classList.add('visible'), i * 100);
+                });
+            }, 50);
+        }
+
+        // 페이지 로드 시 실행
+        triggerFadeIn();
+
+        // 스크롤 시 fade-in 트리거
+        const observer = new IntersectionObserver((entries) => {
+            entries.forEach(e => {
+                if(e.isIntersecting) e.target.classList.add('visible');
+            });
+        }, { threshold: 0.1 });
+
+        document.querySelectorAll('.fade-in').forEach(el => observer.observe(el));
+
+        // ===== 모달 데이터 =====
+        const modalData = {
+            cpu: {
+                title: '🔲 CPU (중앙처리장치)',
+                body: `
+                    <div class="modal-formula">Si → 순수 규소 반도체</div>
+                    <p>CPU는 수십억 개의 트랜지스터로 구성된 집적회로입니다.</p>
+                    <br>
+                    <strong style="color:#00f5ff;">주요 화학 과정:</strong>
+                    <ul style="margin: 10px 0 10px 20px; line-height:2;">
+                        <li>순수 Si 결정에 인(P) 도핑 → n형 반도체</li>
+                        <li>순수 Si 결정에 붕소(B) 도핑 → p형 반도체</li>
+                        <li>n형 + p형 접합 = pn 접합 (트랜지스터 원리)</li>
+                    </ul>
+                    <div class="modal-formula">Si + P → n형 (전자 과잉)</div>
+                    <div class="modal-formula">Si + B → p형 (양공 생성)</div>
+                    <p style="color:#aaa; margin-top:10px; font-size:0.9em;">
+                        ※ 연결 단자에는 금(Au)을 사용해 산화를 방지합니다.
+                    </p>
+                `
+            },
+            monitor: {
+                title: '🖥️ LCD 모니터',
+                body: `
+                    <div class="modal-formula">SiO₂ → 유리 기판</div>
+                    <p>LCD(액정 디스플레이)는 여러 층의 화학 물질로 구성됩니다.</p>
+                    <br>
+                    <strong style="color:#00f5ff;">층 구조:</strong>
+                    <ul style="margin: 10px 0 10px 20px; line-height:2;">
+                        <li>유리 기판 : SiO₂</li>
+                        <li>투명 전극 : ITO (In₂O₃·SnO₂)</li>
+                        <li>액정층 : 유기 분자 (탄화수소)</li>
+                        <li>컬러 필터 : 유기 안료</li>
+                    </ul>
+                    <div class="modal-formula">In₂O₃ · SnO₂ = ITO 투명전극</div>
+                    <p style="color:#aaa; margin-top:10px; font-size:0.9em;">
+                        ※ ITO(Indium Tin Oxide)는 투명하면서도 전기가 통하는 특수 소재입니다!
+                    </p>
+                `
+            },
+            battery: {
+                title: '🔋 리튬이온 배터리',
+                body: `
+                    <div class="modal-formula">LiCoO₂ → 양극 소재</div>
+                    <p>리튬이온 배터리는 화학 반응으로 전기를 저장·방출합니다.</p>
+                    <br>
+                    <strong style="color:#00f5ff;">충전/방전 반응:</strong>
+                    <div class="modal-formula">충전: LiCoO₂ → Li₁₋ₓCoO₂ + xLi⁺ + xe⁻</div>
+                    <div class="modal-formula">방전: C₆ + Li⁺ + e⁻ → LiC₆</div>
+                    <p style="color:#aaa; margin-top:10px; font-size:0.9em;">
+                        ※ 리튬이온(Li⁺)이 양극과 음극 사이를 이동하며 전기를 만듭니다!
+                    </p>
+                `
+            },
+            circuit: {
+                title: '⚡ 회로기판 (PCB)',
+                body: `
+                    <div class="modal-formula">Cu → 전기 배선 (전도체)</div>
+                    <p>PCB는 전자 부품을 연결하는 핵심 기판입니다.</p>
+                    <br>
+                    <strong style="color:#00f5ff;">소재별 역할:</strong>
+                    <ul style="margin: 10px 0 10px 20px; line-height:2;">
+                        <li>구리(Cu) : 전기 배선 (전도율 최고)</li>
+                        <li>금(Au) : 커넥터 단자 (내산화성)</li>
+                        <li>주석-은-구리 합금 : 납땜 소재</li>
+                        <li>에폭시 수지 : 기판 소재</li>
+                    </ul>
+                    <div class="modal-formula">Sn-Ag-Cu 합금 → 무연 솔더</div>
+                    <p style="color:#aaa; margin-top:10px; font-size:0.9em;">
+                        ※ 환경을 위해 납(Pb) 대신 주석-은-구리 합금을 사용합니다!
+                    </p>
+                `
+            }
+        };
+
+        const dailyData = {
+            water: {
+                title: '💧 물 - H₂O',
+                body: `
+                    <div class="modal-formula">H₂O</div>
+                    <p>수소 원자 2개 + 산소 원자 1개의 결합</p>
+                    <br>
+                    <strong style="color:#00f5ff;">놀라운 사실:</strong>
+                    <ul style="margin: 10px 0 10px 20px; line-height:2;">
+                        <li>물 분자는 104.5°의 결합각을 가짐</li>
+                        <li>수소 결합으로 인해 끓는점이 높음 (100°C)</li>
+                        <li>얼음이 물보다 밀도가 낮아 물 위에 뜸!</li>
+                    </ul>
+                    <div class="modal-formula">H-O-H (굽은 형 구조)</div>
+                `
+            },
+            co2: {
+                title: '🫧 이산화탄소 - CO₂',
+                body: `
+                    <div class="modal-formula">CO₂</div>
+                    <p>탄소 원자 1개 + 산소 원자 2개</p>
+                    <br>
+                    <strong style="color:#00f5ff;">우리 생활 속에서:</strong>
+                    <ul style="margin: 10px 0 10px 20px; line-height:2;">
+                        <li>숨 쉴 때 내뱉는 기체</li>
+                        <li>드라이아이스 (-78.5°C에서 승화)</li>
+                        <li>탄산음료의 거품</li>
+                        <li>온실가스의 주범</li>
+                    </ul>
+                    <div class="modal-formula">O=C=O (직선형 구조)</div>
+                `
+            },
+            salt: {
+                title: '🧂 소금 - NaCl',
+                body: `
+                    <div class="modal-formula">NaCl</div>
+                    <p>나트륨(Na) + 염소(Cl)의 이온 결합</p>
+                    <br>
+                    <strong style="color:#00f5ff;">이온 결합이란?</strong>
+                    <ul style="margin: 10px 0 10px 20px; line-height:2;">
+                        <li>Na → Na⁺ + e⁻ (나트륨이 전자 잃음)</li>
+                        <li>Cl + e⁻ → Cl⁻ (염소가 전자 얻음)</li>
+                        <li>Na⁺ + Cl⁻ → NaCl (이온 결합)</li>
+                    </ul>
+                    <div class="modal-formula">Na⁺ + Cl⁻ → NaCl</div>
+                `
+            },
+            sugar: {
+                title: '🍬 설탕 - C₁₂H₂₂O₁₁',
+                body: `
+                    <div class="modal-formula">C₁₂H₂₂O₁₁</div>
+                    <p>탄소 12개, 수소 22개, 산소 11개의 복잡한 구조!</p>
+                    <br>
+                    <strong style="color:#00f5ff;">설탕의 분해:</strong>
+                    <div class="modal-formula">C₁₂H₂₂O₁₁ → C₆H₁₂O₆ + C₆H₁₂O₆</div>
+                    <p style="color:#aaa;">설탕(수크로스) = 포도당 + 과당으로 분해됩니다!</p>
+                `
+            },
+            o2: {
+                title: '🌬️ 산소 - O₂',
+                body: `
+                    <div class="modal-formula">O₂</div>
+                    <p>산소 원자 2개가 이중결합으로 연결</p>
+                    <br>
+                    <strong style="color:#00f5ff;">산소의 역할:</strong>
+                    <ul style="margin: 10px 0 10px 20px; line-height:2;">
+                        <li>호흡: C₆H₁₂O₆ + 6O₂ → 6CO₂ + 6H₂O + 에너지</li>
+                        <li>연소: 물질 + O₂ → 산화물 + 열</li>
+                        <li>광합성의 부산물</li>
+                    </ul>
+                    <div class="modal-formula">O=O (이중결합)</div>
+                `
+            },
+            baking: {
+                title: '🍞 베이킹소다 - NaHCO₃',
+                body: `
+                    <div class="modal-formula">NaHCO₃</div>
+                    <p>탄산수소나트륨, 빵을 부풀게 하는 마법!</p>
+                    <br>
+                    <strong style="color:#00f5ff;">가열 시 반응:</strong>
+                    <div class="modal-formula">2NaHCO₃ → Na₂CO₃ + H₂O + CO₂↑</div>
+                    <p style="color:#aaa;">열을 가하면 CO₂가 발생해 빵이 부풀어 오릅니다!</p>
+                    <br>
+                    <p>식초와 반응: NaHCO₃ + CH₃COOH → 거품 발생!</p>
+                `
+            },
+            glass: {
+                title: '🪟 유리창 - SiO₂',
+                body: `
+                    <div class="modal-formula">SiO₂</div>
+                    <p>이산화규소 - 모래와 유리는 같은 화학식!</p>
+                    <br>
+                    <strong style="color:#00f5ff;">놀라운 사실:</strong>
+                    <ul style="margin: 10px 0 10px 20px; line-height:2;">
+                        <li>해변 모래(SiO₂)를 녹여서 유리를 만듦</li>
+                        <li>컴퓨터 모니터, TV 화면도 SiO₂!</li>
+                        <li>반도체 기판도 SiO₂ 산화막 사용</li>
+                    </ul>
+                    <div class="modal-formula">모래(SiO₂) → 1700°C 이상 가열 → 유리</div>
+                `
+            },
+            rust: {
+                title: '🔩 철 녹 - Fe₂O₃',
+                body: `
+                    <div class="modal-formula">Fe₂O₃</div>
+                    <p>산화철 - 철이 산소와 결합해 만들어지는 붉은 물질</p>
+                    <br>
+                    <strong style="color:#00f5ff;">녹슬기 반응:</strong>
+                    <div class="modal-formula">4Fe + 3O₂ + 6H₂O → 4Fe(OH)₃</div>
+                    <div class="modal-formula">4Fe(OH)₃ → 2Fe₂O₃ + 6H₂O</div>
+                    <p style="color:#aaa; margin-top:10px;">물(H₂O)이 있어야 더 빨리 녹이 습니다!</p>
+                `
+            },
+            toothpaste: {
+                title: '🦷 치약 - CaF₂',
+                body: `
+                    <div class="modal-formula">CaF₂ (불화칼슘)</div>
+                    <p>치약 속 불소 성분이 충치를 예방합니다!</p>
+                    <br>
+                    <strong style="color:#00f5ff;">불소의 역할:</strong>
+                    <div class="modal-formula">Ca₁₀(PO₄)₆(OH)₂ + F⁻ → Ca₁₀(PO₄)₆F₂</div>
+                    <p style="color:#aaa;">치아의 하이드록시아파타이트가 불화아파타이트로 변환되어 더 단단해집니다!</p>
+                    <br>
+                    <p>치약의 주요 성분: NaF (불화나트륨), CaCO₃ (탄산칼슘)</p>
+                `
+            },
+            vinegar: {
+                title: '🍶 식초 - CH₃COOH',
+                body: `
+                    <div class="modal-formula">CH₃COOH</div>
+                    <p>아세트산 - 신맛의 정체!</p>
+                    <br>
+                    <strong style="color:#00f5ff;">산-염기 반응:</strong>
+                    <div class="modal-formula">CH₃COOH + NaHCO₃ → CH₃COONa + H₂O + CO₂↑</div>
+                    <p style="color:#aaa;">식초(산) + 베이킹소다(염기) = 거품 발생!</p>
+                    <br>
+                    <p>생활 속 활용: 석회 제거, 살균, 요리</p>
+                `
+            },
+            alcohol: {
+                title: '🧴 소독용 알코올 - C₂H₅OH',
+                body: `
+                    <div class="modal-formula">C₂H₅OH (에탄올)</div>
+                    <p>에탄올 - 바이러스와 세균을 파괴!</p>
+                    <br>
+                    <strong style="color:#00f5ff;">소독 원리:</strong>
+                    <ul style="margin: 10px 0 10px 20px; line-height:2;">
+                        <li>70% 농도가 가장 효과적 (100%는 오히려 약함)</li>
+                        <li>세균의 단백질을 변성시킴</li>
+                        <li>바이러스의 지질막 파괴</li>
+                    </ul>
+                    <div class="modal-formula">연소: C₂H₅OH + 3O₂ → 2CO₂ + 3H₂O</div>
+                `
+            },
+            plastic: {
+                title: '🧴 페트병 - (C₁₀H₈O₄)ₙ',
+                body: `
+                    <div class="modal-formula">(C₁₀H₈O₄)ₙ (PET)</div>
+                    <p>폴리에틸렌 테레프탈레이트 - 투명하고 가벼운 플라스틱!</p>
+                    <br>
+                    <strong style="color:#00f5ff;">합성 과정:</strong>
+                    <div class="modal-formula">HOCH₂CH₂OH + HOOCC₆H₄COOH → PET + H₂O</div>
+                    <p style="color:#aaa;">에틸렌글리콜 + 테레프탈산의 축합 중합으로 만들어집니다!</p>
+                    <br>
+                    <div style="color:#ffaa00;">♻️ PET는 재활용 가능! 분리수거를 꼭 해주세요!</div>
+                `
+            }
+        };
+
+        // ===== 모달 함수 =====
+        function openModal(key) {
+            const data = modalData[key];
+            if(!data) return;
+            document.getElementById('modal-title').innerHTML = data.title;
+            document.getElementById('modal-body').innerHTML = data.body;
+            document.getElementById('modal-device').classList.add('active');
+        }
+
+        function openDailyModal(key) {
+            const data = dailyData[key];
+            if(!data) return;
+            document.getElementById('daily-modal-title').innerHTML = data.title;
+            document.getElementById('daily-modal-body').innerHTML = data.body;
+            document.getElementById('modal-daily').classList.add('active');
+        }
+
+        function closeModal(id) {
+            document.getElementById(id).classList.remove('active');
+        }
+
+        // 모달 외부 클릭 시 닫기
+        document.querySelectorAll('.modal').forEach(m => {
+            m.addEventListener('click', function(e) {
+                if(e.target === this) this.classList.remove('active');
+            });
+        });
+
+        // ===== 퀴즈 =====
+        const quizData = [
+            {
+                q: 'TV와 컴퓨터 디스플레이에서 공통으로 사용하는 투명 전극 소재는?',
+                options: ['Cu₂O', 'In₂O₃·SnO₂ (ITO)', 'Al₂O₃', 'SiC'],
+                answer: 1
+            },
+            {
+                q: '컴퓨터 CPU의 반도체 기판 소재는?',
+                options: ['Fe (철)', 'Cu (구리)', 'Si (규소)', 'Au (금)'],
+                answer: 2
+            },
+            {
+                q: 'LED 전등에서 청색 빛을 내는 물질은?',
+                options: ['W (텅스텐)', 'Ar (아르곤)', 'InGaN (인듐갈륨질화물)', 'Hg (수은)'],
+                answer: 2
+            },
+            {
+                q: '유리창과 모래가 공통으로 가지는 화학식은?',
+                options: ['NaCl', 'CaCO₃', 'SiO₂', 'Al₂O₃'],
+                answer: 2
+            }
+        ];
+
+        let currentQuiz = 0;
+        let answered = false;
+
+        function checkAnswer(el, isCorrect) {
+            if(answered) return;
+            answered = true;
+
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach((opt, i) => {
+                if(i === quizData[currentQuiz].answer) opt.classList.add('correct');
+                else opt.classList.add('wrong');
+            });
+
+            const result = document.getElementById('quiz-result');
+            result.style.display = 'block';
+
+            if(isCorrect || el.classList.contains('correct')) {
+                result.innerHTML = '🎉 정답입니다! 훌륭해요!';
+                result.style.color = '#00ff64';
+            } else {
+                result.innerHTML = '❌ 틀렸어요! 정답을 확인해보세요.';
+                result.style.color = '#ff5555';
+            }
+
+            // 실제 정답 표시
+            const optionEls = document.querySelectorAll('.quiz-option');
+            optionEls.forEach((opt, i) => {
+                if(i === quizData[currentQuiz].answer) opt.classList.add('correct');
+            });
+
+            document.getElementById('quiz-reset').style.display = 'inline-block';
+        }
+
+        function resetQuiz() {
+            currentQuiz = (currentQuiz + 1) % quizData.length;
+            answered = false;
+
+            const q = quizData[currentQuiz];
+            document.getElementById('quiz-q').textContent = q.q;
+
+            const options = document.querySelectorAll('.quiz-option');
+            options.forEach((opt, i) => {
+                opt.textContent = q.options[i];
+                opt.className = 'quiz-option';
+                opt.onclick = () => checkAnswer(opt, i === q.answer);
+            });
+
+            document.getElementById('quiz-result').style.display = 'none';
+            document.getElementById('quiz-reset').style.display = 'none';
+        }
+
+        // 초기 퀴즈 설정
+        resetQuiz();
+        currentQuiz = 0;
+        const q0 = quizData[0];
+        document.getElementById('quiz-q').textContent = q0.q;
+        const opts = document.querySelectorAll('.quiz-option');
+        opts.forEach((opt, i) => {
+            opt.textContent = q0.options[i];
+            opt.className = 'quiz-option';
+            opt.onclick = () => checkAnswer(opt, i === q0.answer);
+        });
+
+    </script>
+</body>
+</html>
